@@ -21,10 +21,10 @@ export class EnrollmentService {
     private readonly enrollmentRepository: EnrollmentRepository,
   ) {}
 
-  async enroll(dto: {
-    studentId: string;
-    classOfferingId: string;
-  }): Promise<void> {
+  async enroll(
+    dto: { studentId: string; classOfferingId: string },
+    baseUrl = "",
+  ): Promise<EnrollmentDto> {
     const existing =
       await this.enrollmentRepository.findByStudentAndClassOffering(
         dto.studentId,
@@ -44,22 +44,37 @@ export class EnrollmentService {
       enrolledAt: new Date(),
     });
 
-    await this.enrollmentRepository.create(enrollment!);
+    const created = await this.enrollmentRepository.create(enrollment!);
+    return EnrollmentDto.from(created, baseUrl)!;
   }
 
-  async cancel(id: string): Promise<void> {
+  async cancel(id: string, baseUrl = ""): Promise<EnrollmentDto> {
     const enrollment = await this.enrollmentRepository.findById(id);
 
     if (!enrollment) {
       throw new NotFoundException("Enrollment not found");
     }
 
-    await this.enrollmentRepository.cancel(id);
+    const canceled = await this.enrollmentRepository.cancel(id);
+    return EnrollmentDto.from(canceled, baseUrl)!;
   }
 
-  async listByClassOffering(classOfferingId: string): Promise<EnrollmentDto[]> {
+  async findById(id: string, baseUrl = ""): Promise<EnrollmentDto> {
+    const enrollment = await this.enrollmentRepository.findById(id);
+
+    if (!enrollment) {
+      throw new NotFoundException("Enrollment not found");
+    }
+
+    return EnrollmentDto.from(enrollment, baseUrl)!;
+  }
+
+  async listByClassOffering(
+    classOfferingId: string,
+    baseUrl = "",
+  ): Promise<EnrollmentDto[]> {
     const response =
       await this.enrollmentRepository.findByClassOfferingId(classOfferingId);
-    return response.map((row) => EnrollmentDto.from(row)!);
+    return response.map((row) => EnrollmentDto.from(row, baseUrl)!);
   }
 }

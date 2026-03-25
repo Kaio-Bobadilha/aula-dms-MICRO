@@ -12,27 +12,41 @@ import { and, eq } from "drizzle-orm";
 export class DrizzleEnrollmentRepository implements EnrollmentRepository {
   constructor(private readonly drizzleService: DrizzleService) {}
 
-  async create(enrollment: Enrollment): Promise<void> {
-    await this.drizzleService.db.insert(enrollmentsSchema).values({
-      studentId: enrollment.studentId,
-      classOfferingId: enrollment.classOfferingId,
-      status: enrollment.status,
-      enrolledAt: enrollment.enrolledAt,
-      canceledAt: enrollment.canceledAt ?? null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+  async create(enrollment: Enrollment): Promise<Enrollment> {
+    const [row] = await this.drizzleService.db
+      .insert(enrollmentsSchema)
+      .values({
+        studentId: enrollment.studentId,
+        classOfferingId: enrollment.classOfferingId,
+        status: enrollment.status,
+        enrolledAt: enrollment.enrolledAt,
+        canceledAt: enrollment.canceledAt ?? null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return Enrollment.restore({
+      ...row,
+      status: row.status as EnrollmentStatus,
+    })!;
   }
 
-  async cancel(id: string): Promise<void> {
-    await this.drizzleService.db
+  async cancel(id: string): Promise<Enrollment> {
+    const [row] = await this.drizzleService.db
       .update(enrollmentsSchema)
       .set({
         status: "canceled",
         canceledAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(enrollmentsSchema.id, id));
+      .where(eq(enrollmentsSchema.id, id))
+      .returning();
+
+    return Enrollment.restore({
+      ...row,
+      status: row.status as EnrollmentStatus,
+    })!;
   }
 
   async findById(id: string): Promise<Enrollment | null> {
