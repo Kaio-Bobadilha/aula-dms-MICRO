@@ -1,4 +1,4 @@
-import { EnrollmentDto } from "@enrollment/application/dto/enrollment.dto";
+import { CreateEnrollmentDto } from "@enrollment/application/dto/enrollment.dto";
 import {
   Enrollment,
   EnrollmentStatus,
@@ -13,6 +13,13 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import type { PaginatedResult } from "@shared/infra/hateoas";
+
+interface ListParams {
+  classOfferingId?: string;
+  page: number;
+  limit: number;
+}
 
 @Injectable()
 export class EnrollmentService {
@@ -21,15 +28,25 @@ export class EnrollmentService {
     private readonly enrollmentRepository: EnrollmentRepository,
   ) {}
 
-  async enroll(
-    dto: { studentId: string; classOfferingId: string },
-    baseUrl = "",
-  ): Promise<EnrollmentDto> {
-    const existing =
-      await this.enrollmentRepository.findByStudentAndClassOffering(
-        dto.studentId,
-        dto.classOfferingId,
-      );
+  async listPaginated(params: ListParams): Promise<PaginatedResult<Enrollment>> {
+    const { classOfferingId, page, limit } = params;
+
+    if (!classOfferingId) {
+      const data: Enrollment[] = [];
+      const total = 0;
+      return { data, total, page, limit };
+    }
+
+    const data = await this.enrollmentRepository.findPaginatedByClassOfferingId(classOfferingId, page, limit);
+    const total = await this.enrollmentRepository.countByClassOfferingId(classOfferingId);
+    return { data, total, page, limit };
+  }
+
+  async enroll(dto: CreateEnrollmentDto): Promise<Enrollment> {
+    const existing = await this.enrollmentRepository.findByStudentAndClassOffering(
+      dto.studentId,
+      dto.classOfferingId,
+    );
 
     if (existing) {
       throw new ConflictException(
@@ -44,37 +61,27 @@ export class EnrollmentService {
       enrolledAt: new Date(),
     });
 
-    const created = await this.enrollmentRepository.create(enrollment!);
-    return EnrollmentDto.from(created, baseUrl)!;
+    return await this.enrollmentRepository.create(enrollment!);
   }
 
-  async cancel(id: string, baseUrl = ""): Promise<EnrollmentDto> {
+  async cancel(id: string): Promise<void> {
     const enrollment = await this.enrollmentRepository.findById(id);
 
     if (!enrollment) {
       throw new NotFoundException("Enrollment not found");
     }
 
-    const canceled = await this.enrollmentRepository.cancel(id);
-    return EnrollmentDto.from(canceled, baseUrl)!;
+    await this.enrollmentRepository.cancel(id);
   }
 
-  async findById(id: string, baseUrl = ""): Promise<EnrollmentDto> {
+  async findById(id: string): Promise<Enrollment | null> {
     const enrollment = await this.enrollmentRepository.findById(id);
 
     if (!enrollment) {
       throw new NotFoundException("Enrollment not found");
     }
 
-    return EnrollmentDto.from(enrollment, baseUrl)!;
-  }
-
-  async listByClassOffering(
-    classOfferingId: string,
-    baseUrl = "",
-  ): Promise<EnrollmentDto[]> {
-    const response =
-      await this.enrollmentRepository.findByClassOfferingId(classOfferingId);
-    return response.map((row) => EnrollmentDto.from(row, baseUrl)!);
+    return enrollment;
   }
 }
+

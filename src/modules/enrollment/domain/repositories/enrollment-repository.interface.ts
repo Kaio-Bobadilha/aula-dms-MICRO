@@ -11,4 +11,12 @@ export interface EnrollmentRepository {
     studentId: string,
     classOfferingId: string,
   ): Promise<Enrollment | null>;
+  // Pagination
+  findPaginatedByClassOfferingId(
+    classOfferingId: string,
+    page: number,
+    limit: number,
+  ): Promise<Enrollment[]>;
+  countByClassOfferingId(classOfferingId: string): Promise<number>;
 }
+
