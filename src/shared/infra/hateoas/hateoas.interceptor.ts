@@ -77,24 +77,24 @@ export class HateoasInterceptor implements NestInterceptor {
       _links: {
         self: { href: fullPath, method: "GET" },
         next: page < totalPages
-          ? { 
-              href: `${basePath}?${new URLSearchParams({ ...query, page: (page + 1).toString() }).toString()}`, 
-              method: "GET" 
+          ? {
+              href: `${basePath}?${new URLSearchParams({ ...query, _page: (page + 1).toString() }).toString()}`,
+              method: "GET"
             }
           : null,
         prev: page > 1
-          ? { 
-              href: `${basePath}?${new URLSearchParams({ ...query, page: (page - 1).toString() }).toString()}`, 
-              method: "GET" 
+          ? {
+              href: `${basePath}?${new URLSearchParams({ ...query, _page: (page - 1).toString() }).toString()}`,
+              method: "GET"
             }
           : null,
-        first: { 
-            href: `${basePath}?${new URLSearchParams({ ...query, page: '1' }).toString()}`, 
-            method: "GET" 
+        first: {
+            href: `${basePath}?${new URLSearchParams({ ...query, _page: '1' }).toString()}`,
+            method: "GET"
           },
-        last: { 
-            href: `${basePath}?${new URLSearchParams({ ...query, page: totalPages.toString() }).toString()}`, 
-            method: "GET" 
+        last: {
+            href: `${basePath}?${new URLSearchParams({ ...query, _page: totalPages.toString() }).toString()}`,
+            method: "GET"
           },
         create: { href: basePath, method: "POST" },
       },

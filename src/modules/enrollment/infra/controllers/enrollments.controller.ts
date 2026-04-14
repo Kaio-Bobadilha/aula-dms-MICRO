@@ -18,7 +18,7 @@ export class EnrollmentsController {
       self: { href: `/v1/enrollments/${item.id}`, method: "GET" },
       cancel: item.status === "active" ? { href: `/v1/enrollments/${item.id}/cancel`, method: "PATCH" } : null,
       student: { href: `/v1/students/${item.studentId}`, method: "GET" },
-      classOffering: { href: `/v1/class-offerings/${item.classOfferingId}`, method: "GET" },
+      classOffering: { href: `/v1/classOfferings/${item.classOfferingId}`, method: "GET" },
     }),
   })
   @ApiOperation({ summary: "Listar matrículas" })
@@ -44,7 +44,7 @@ export class EnrollmentsController {
       list: { href: "/v1/enrollments", method: "GET" },
       cancel: item.status === "active" ? { href: `/v1/enrollments/${item.id}/cancel`, method: "PATCH" } : null,
       student: { href: `/v1/students/${item.studentId}`, method: "GET" },
-      classOffering: { href: `/v1/class-offerings/${item.classOfferingId}`, method: "GET" },
+      classOffering: { href: `/v1/classOfferings/${item.classOfferingId}`, method: "GET" },
     }),
   })
   @ApiOperation({ summary: "Buscar matrícula por ID" })
