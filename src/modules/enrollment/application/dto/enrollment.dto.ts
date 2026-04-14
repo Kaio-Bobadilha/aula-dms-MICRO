@@ -1,5 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import { IsNotEmpty, IsUUID } from "class-validator";
 import type { Enrollment } from "@enrollment/domain/models/enrollment.entity";
+
+export class CreateEnrollmentDto {
+  @ApiProperty()
+  @IsUUID('4')
+  @IsNotEmpty()
+  studentId!: string;
+
+  @ApiProperty()
+  @IsUUID('4')
+  @IsNotEmpty()
+  classOfferingId!: string;
+}
 
 export class HateoasLink {
   @ApiProperty({ example: "http://localhost:3001/enrollments/uuid" })
@@ -7,6 +21,11 @@ export class HateoasLink {
 
   @ApiProperty({ example: "GET" })
   method: string;
+
+  constructor(href: string, method: string) {
+    this.href = href;
+    this.method = method;
+  }
 }
 
 export class EnrollmentLinks {
@@ -21,6 +40,13 @@ export class EnrollmentLinks {
 
   @ApiProperty({ type: HateoasLink })
   classOffering: HateoasLink;
+
+  constructor(self: HateoasLink, student: HateoasLink, classOffering: HateoasLink, cancel?: HateoasLink) {
+    this.self = self;
+    this.student = student;
+    this.classOffering = classOffering;
+    this.cancel = cancel;
+  }
 }
 
 export class EnrollmentDto {
@@ -65,12 +91,17 @@ export class EnrollmentDto {
 
   public static from(
     enrollment: Enrollment | null,
-    baseUrl = "",
   ): EnrollmentDto | null {
     if (!enrollment) return null;
 
-    const self = `${baseUrl}/enrollments/${enrollment.id}`;
+    const selfHref = `/v1/enrollments/${enrollment.id}`;
     const isActive = enrollment.status === "active";
+    const selfLink = new HateoasLink(selfHref, "GET");
+    const studentLink = new HateoasLink(`/v1/students/${enrollment.studentId}`, "GET");
+    const classOfferingLink = new HateoasLink(`/v1/class-offerings/${enrollment.classOfferingId}`, "GET");
+    const cancelLink = isActive ? new HateoasLink(selfHref, "DELETE") : undefined;
+
+    const links = new EnrollmentLinks(selfLink, studentLink, classOfferingLink, cancelLink);
 
     return new EnrollmentDto(
       enrollment.id,
@@ -79,20 +110,8 @@ export class EnrollmentDto {
       enrollment.status,
       enrollment.enrolledAt,
       enrollment.canceledAt,
-      {
-        self: { href: self, method: "GET" },
-        ...(isActive && {
-          cancel: { href: self, method: "DELETE" },
-        }),
-        student: {
-          href: `${baseUrl}/students/${enrollment.studentId}`,
-          method: "GET",
-        },
-        classOffering: {
-          href: `${baseUrl}/class-offerings/${enrollment.classOfferingId}`,
-          method: "GET",
-        },
-      },
+      links,
     );
   }
 }
+
