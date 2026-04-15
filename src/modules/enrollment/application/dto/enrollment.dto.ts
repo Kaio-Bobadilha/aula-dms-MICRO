@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsUUID } from "class-validator";
+import { IsNotEmpty, IsUUID, IsOptional, IsEnum } from "class-validator";
+import { EnrollmentStatus } from "@enrollment/domain/models/enrollment.entity";
 import type { Enrollment } from "@enrollment/domain/models/enrollment.entity";
 
 export class CreateEnrollmentDto {
@@ -13,6 +14,18 @@ export class CreateEnrollmentDto {
   @IsUUID('4')
   @IsNotEmpty()
   classOfferingId!: string;
+}
+
+export class UpdateEnrollmentDto {
+  @ApiPropertyOptional()
+  @IsEnum(EnrollmentStatus)
+  @IsOptional()
+  status?: EnrollmentStatus;
+
+  @ApiPropertyOptional()
+  @Type(() => Date)
+  @IsOptional()
+  canceledAt?: Date;
 }
 
 export class HateoasLink {
