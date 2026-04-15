@@ -15,6 +15,13 @@
       "when": 1773436800000,
       "tag": "0001_seed_data",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776212016956,
+      "tag": "0002_noisy_speedball",
+      "breakpoints": true
     }
   ]
 }
